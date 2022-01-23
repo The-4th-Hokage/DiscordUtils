@@ -20,5 +20,5 @@ setuptools.setup(
     python_requires=">= 3.6",
     include_package_data=True,
     install_requires=["discord.py"],
-    extras_require={"voice": ["discord.py[voice]", "youtube-dl"]}
+    extras_require={"voice": ["discord.py[voice]", "youtube-dl"]},
 )
