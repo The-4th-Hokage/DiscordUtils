@@ -1,11 +1,13 @@
 from asyncio import sleep
+from typing import Optional
+
 import discord
 from discord import AuditLogAction
 from discord.errors import Forbidden
-from typing import Optional
 
 
 class InviteTracker:
+
     def __init__(self, bot):
         self.bot = bot
         self._cache = {}
@@ -36,17 +38,20 @@ class InviteTracker:
         if invite.guild.id not in self._cache:
             return
         ref_invite = self._cache[invite.guild.id][invite.code]
-        if ((ref_invite.created_at.timestamp() + ref_invite.max_age > discord.utils.utcnow().timestamp() or ref_invite.max_age == 0)
+        if ((ref_invite.created_at.timestamp() + ref_invite.max_age >
+             discord.utils.utcnow().timestamp() or ref_invite.max_age == 0)
                 and ref_invite.max_uses > 0
                 and ref_invite.uses == ref_invite.max_uses - 1):
             try:
-                async for entry in invite.guild.audit_logs(limit=1, action=AuditLogAction.invite_delete):
+                async for entry in invite.guild.audit_logs(
+                        limit=1, action=AuditLogAction.invite_delete):
                     if entry.target.code != invite.code:
                         self._cache[invite.guild.id][
                             ref_invite.code].revoked = True
                         return
                 else:
-                    self._cache[invite.guild.id][ref_invite.code].revoked = True
+                    self._cache[invite.guild.id][
+                        ref_invite.code].revoked = True
                     return
             except Forbidden:
                 self._cache[invite.guild.id][ref_invite.code].revoked = True
@@ -65,7 +70,8 @@ class InviteTracker:
         except KeyError:
             return
 
-    async def fetch_inviter(self, member: discord.Member) -> Optional[discord.Invite]:
+    async def fetch_inviter(
+            self, member: discord.Member) -> Optional[discord.Invite]:
         await sleep(self.bot.latency)
         async for new_invite in member.guild.invites():
             for cached_invite in self._cache[member.guild.id].values():
@@ -75,7 +81,8 @@ class InviteTracker:
                     if cached_invite.revoked:
                         self._cache[member.guild.id].pop(cached_invite.code)
                     elif new_invite.inviter == cached_invite.inviter:
-                        self._cache[member.guild.id][cached_invite.code] = new_invite
+                        self._cache[member.guild.id][
+                            cached_invite.code] = new_invite
                     else:
                         self._cache[member.guild.id][
                             cached_invite.code].uses += 1
